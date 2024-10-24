@@ -9,14 +9,14 @@ groups:
     config-path:
       - containers/compose.dev.yaml
     services:
-      default: mhai-web
+      default: mhai-web-deps
       available:
-        - name: mhai-web
+        - name: mhai-web-deps
 
   prod:
     config-path:
       - containers/compose.prod.yaml
     services:
-      default: mhai-web
+      default: mhai-web-deps
       available:
-        - name: mhai-web
+        - name: mhai-web-deps

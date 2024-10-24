@@ -2,13 +2,15 @@
 
 FROM condaforge/mambaforge:latest
 
+ARG ENV=base
+
 LABEL maintainer="Ivan Ogasawara <ivan.ogasawara@gmail.com>"
 LABEL org.opencontainers.image.title="Mhai"
 LABEL org.opencontainers.image.authors="Mhai Team"
-LABEL org.opencontainers.image.source="https://github.com/mentalhealthai-org/mhai-web"
-LABEL org.opencontainers.image.version="latest"
+LABEL org.opencontainers.image.source="https://github.com/mentalhealthai-org/mhai-web-deps"
+LABEL org.opencontainers.image.version="${ENV}"
 LABEL org.opencontainers.image.description="Mhai Web"
-LABEL org.mentalhealthai_org.config.version="latest"
+LABEL org.mentalhealthai_org.config.version="${ENV}"
 
 # it is the default, but using it here to have it explicitly
 USER root
@@ -45,21 +47,22 @@ ENV USERNAME=mhai
 
 RUN addgroup --gid ${GID} ${USERNAME} \
   && useradd --uid ${UID} --gid ${GID} -ms /bin/bash ${USERNAME} \
-  && mkdir -p /opt/services/mhai-web \
-  && chmod -R a+rwx /opt/conda /opt/services \
+  && mkdir -p /opt/deps \
+	&& mkdir -p /opt/services \
+	&& chmod -R a+rwx /opt/conda /opt/services /opt/deps \
   && export ENV_NAME="$ENV_NAME" \
-  && chown ${USERNAME}:${USERNAME} /opt/services \
+  && chown -R ${USERNAME}:${USERNAME} /opt/ \
   && echo "${USERNAME} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${USERNAME} \
   && chmod 0440 /etc/sudoers.d/${USERNAME}
 
 USER ${USERNAME}
 
-COPY --chown=${USERNAME}:${USERNAME} ./conda/ /tmp/conda
+COPY --chown=${USERNAME}:${USERNAME} ./conda/ /opt/deps
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 
-RUN mamba env create -n $ENV_NAME --file /tmp/conda/prod.yaml \
+RUN mamba env create -n $ENV_NAME --file /opt/deps/${ENV}.yaml \
   && conda clean --all \
   && find /opt/conda/ -type f,l -name '*.pyc' -delete \
   && find /opt/conda/ -type f,l -name '*.js.map' -delete \
@@ -67,23 +70,22 @@ RUN mamba env create -n $ENV_NAME --file /tmp/conda/prod.yaml \
 
 ENV CONDA_PREFIX /opt/conda/envs/$ENV_NAME
 ENV PATH ${CONDA_PREFIX}/bin:$PATH
+ENV ENV=${ENV}
 
 # install dependencies
-COPY --chown=${USERNAME}:${USERNAME} pyproject.toml poetry.lock /opt/services/mhai-web/
-COPY --chown=${USERNAME}:${USERNAME} containers/django/scripts/install-deps.sh /opt/install-deps.sh
-COPY --chown=${USERNAME}:${USERNAME} containers/django/scripts/activate.sh /opt/activate.sh
-
-ARG ENV=production
+COPY --chown=${USERNAME}:${USERNAME} pyproject.toml poetry.lock /opt/deps/
+COPY --chown=${USERNAME}:${USERNAME} containers/scripts/install-deps.sh /opt/deps/install-deps.sh
+COPY --chown=${USERNAME}:${USERNAME} containers/scripts/activate.sh /opt/activate.sh
 
 RUN conda init bash \
   && source ~/.bashrc \
   && source /opt/activate.sh \
   && conda env list \
-  && /opt/install-deps.sh
+  && /opt/deps/install-deps.sh
 
 RUN sudo chown ${USERNAME}:${USERNAME} /opt/
-COPY --chown=mhai-web:mhai-web ./containers/django/scripts/entrypoint.sh /opt/entrypoint.sh
-RUN sed -i 's/\r$//g' /opt/entrypoint.sh
-RUN chmod +x /opt/entrypoint.sh
+COPY --chown=mhai-web:mhai-web ./containers/scripts/entrypoint.sh /opt/entrypoint.sh
+RUN sudo sed -i 's/\r$//g' /opt/entrypoint.sh \
+  && sudo chmod +x /opt/entrypoint.sh
 
 ENTRYPOINT ["tini", "--", "/opt/entrypoint.sh"]

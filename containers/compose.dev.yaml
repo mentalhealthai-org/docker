@@ -1,8 +1,8 @@
 services:
   mhai-web-deps:
-    image: ghcr.io/mentalhealthai-org/mhai-web-deps:prod
+    image: ghcr.io/mentalhealthai-org/mhai-web-deps:dev
     build:
       context: ..
       dockerfile: ./containers/Dockerfile
       args:
-        ENV: prod
+        ENV: dev
