@@ -1,0 +1,22 @@
+backend: compose
+env-file: .envs/.env
+defaults:
+  group: ${{ env.SUGAR_GROUP }}
+  project-name: mhai
+
+groups:
+  dev:
+    config-path:
+      - containers/compose.dev.yaml
+    services:
+      default: mhai-web
+      available:
+        - name: mhai-web
+
+  prod:
+    config-path:
+      - containers/compose.prod.yaml
+    services:
+      default: mhai-web
+      available:
+        - name: mhai-web

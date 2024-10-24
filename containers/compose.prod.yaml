@@ -1,0 +1,6 @@
+services:
+  mhai-web:
+    image: mhai-web
+    build:
+      context: ..
+      dockerfile: ./containers/django/production/Dockerfile
