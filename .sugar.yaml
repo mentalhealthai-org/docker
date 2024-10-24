@@ -1,5 +1,4 @@
 backend: compose
-env-file: .envs/.env
 defaults:
   group: ${{ env.SUGAR_GROUP }}
   project-name: mhai

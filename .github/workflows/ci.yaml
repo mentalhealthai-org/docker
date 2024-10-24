@@ -81,18 +81,12 @@ jobs:
       run:
         shell: bash -l {0}
 
+    env:
+      SUGAR_ENV: ${{ matrix.sugar_env }}
+
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
-
-      - name: Create environment variables files
-        env:
-          SUGAR_ENV: ${{ matrix.sugar_env }}
-        run: |
-          pushd .envs
-          envsubst < .env.tpl > .env
-          cat .env
-          popd
 
       - uses: conda-incubator/setup-miniconda@v3
         with:
