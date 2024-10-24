@@ -67,14 +67,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        sugar_env:
+        sugar_group:
           - dev
           - prod
 
     runs-on: ubuntu-latest
 
     concurrency:
-      group: ci-${{ matrix.sugar_env }}-${{ github.ref }}
+      group: ci-${{ matrix.sugar_group }}-${{ github.ref }}
       cancel-in-progress: true
 
     defaults:
@@ -82,7 +82,7 @@ jobs:
         shell: bash -l {0}
 
     env:
-      SUGAR_ENV: ${{ matrix.sugar_env }}
+      SUGAR_GROUP: ${{ matrix.sugar_group }}
 
     steps:
       - name: Checkout Code Repository
